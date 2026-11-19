@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0c0a12">
+  <title>Idle Cathedral</title>
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0c0a12; color: #f3e7c9;
+      font-family: Georgia, "Times New Roman", serif; touch-action: none; -webkit-user-select: none; user-select: none; }
+    /* Portrait game (Nov 19): phones fill the window held upright; on a desktop the canvas is a phone-shaped
+       column (9:19.5) centred in the window. */
+    #stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+    #unity-canvas { display: block; height: 100vh; width: min(100vw, calc(100vh * 9 / 19.5)); background: #0c0a12; outline: none; }
+    @supports (height: 100dvh) { #unity-canvas { height: 100dvh; width: min(100vw, calc(100dvh * 9 / 19.5)); } }
+    #unity-canvas.mobile { width: 100vw; }
+    #loader { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: #0c0a12; }
+    #loader h1 { margin: 0; font-weight: normal; letter-spacing: 0.08em; font-size: clamp(22px, 4vw, 40px); color: #f6d58a; text-shadow: 0 0 18px #c98a2a88; }
+    #bar { width: min(320px, 70vw); height: 10px; border-radius: 6px; background: #241d33; overflow: hidden; box-shadow: inset 0 0 0 1px #5a4a2a; }
+    #fill { height: 100%; width: 0; background: linear-gradient(90deg, #c98a2a, #f6d58a); transition: width .2s; }
+    #msg { font-size: 14px; opacity: .75; max-width: 80vw; text-align: center; }
+    #rotate { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; padding: 24px;
+      background: #0c0a12f2; font-size: 20px; z-index: 10; }
+    @media (orientation: landscape) and (max-height: 900px) { #rotate.mobile { display: flex; } }
+    /* Small icon on the left edge, mid-height: the game's top bar and bottom nav fill both corners. Hidden on phones. */
+    #fs { position: fixed; left: 6px; top: 50%; transform: translateY(-50%); z-index: 5; width: 30px; height: 30px; padding: 0;
+      border: 1px solid #5a4a2a; border-radius: 6px; background: #1a1424aa; color: #f3e7c9; font: 16px/28px Georgia, serif;
+      cursor: pointer; opacity: .35; }
+    #fs.mobile { display: none; }
+    #fs:hover { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div id="stage"><canvas id="unity-canvas" tabindex="-1"></canvas></div>
+  <div id="loader"><h1>Idle Cathedral</h1><div id="bar"><div id="fill"></div></div><div id="msg">Loading…</div></div>
+  <div id="rotate">Hold your phone upright to play.</div>
+  <button id="fs" title="Fullscreen" aria-label="Fullscreen">⛶</button>
+  <script>
+    var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+    if (isMobile) { document.getElementById("rotate").classList.add("mobile"); document.getElementById("fs").classList.add("mobile"); document.getElementById("unity-canvas").classList.add("mobile"); }
+    var canvas = document.getElementById("unity-canvas");
+    var buildUrl = "Build";
+    var config = {
+      dataUrl: buildUrl + "/0f8bf923ac97fcc94205c12e22f922d4.data.unityweb",
+      frameworkUrl: buildUrl + "/96273c44c67091ecca31176164cc03da.framework.js.unityweb",
+      codeUrl: buildUrl + "/8ed8a44785ec6a7c4c9b9a3b31cc14bc.wasm.unityweb",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "Idle Cathedral",
+      productName: "Idle Cathedral",
+      productVersion: "1.0.0",
+      matchWebGLToCanvasSize: true,
+      devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+      showBanner: function (msg, type) { if (type === "error") document.getElementById("msg").textContent = msg; console.log(msg); },
+    };
+    var script = document.createElement("script");
+    script.src = buildUrl + "/6929565387eaaacd3af0f15adbc7811a.loader.js";
+    script.onload = function () {
+      createUnityInstance(canvas, config, function (p) {
+        document.getElementById("fill").style.width = (100 * p) + "%";
+      }).then(function (instance) {
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("fs").onclick = function () { instance.SetFullscreen(1); };
+        canvas.focus();
+      }).catch(function (e) { document.getElementById("msg").textContent = "Couldn't start the game: " + e; });
+    };
+    document.body.appendChild(script);
+  </script>
+</body>
+</html>
